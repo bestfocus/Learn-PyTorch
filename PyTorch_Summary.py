@@ -3,3 +3,8 @@
 # specify the structure of a neural network model
 # train a model
 # performance metrics
+
+# Reference Udacity - Deep Learning With PyTorch
+
+import torch
+from torchvision import datasets, transforms
