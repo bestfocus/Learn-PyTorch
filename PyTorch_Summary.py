@@ -26,6 +26,7 @@ tx.grad # gradients dy/d(tx)
 # define the structure of a model
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 
 class QNetwork(nn.Module):
     def __init__(self, input_size, output_size, seed, fc1_units=64, fc2_units=64):
@@ -41,18 +42,22 @@ class QNetwork(nn.Module):
         return self.fc3(x)
 
 # train the model
-self.qnetwork_local = QNetwork(input_size, output_size, seed)
-self.qnetwork_target = QNetwork(input_size, output_size, seed)
-Q_targets_next = self.qnetwork_target(input).detach().max(1)[0].unsqueeze(1)
+qnetwork_local = QNetwork(input_size, output_size, seed)
+qnetwork_target = QNetwork(input_size, output_size, seed)
+optimizer = optim.Adam(qnetwork_local.parameters(), lr=5e-4)
+Q_targets_next = qnetwork_target(input).detach().max(1)[0].unsqueeze(1)
 Q_targets = rewards + (gamma * Q_targets_next ) # get the model result by getting the max output and use the formula rewards+gamma*max_output
-Q_expected = self.qnetwork_local(input).gather(1, selection) # get the result with a predefined selection
+Q_expected = qnetwork_local(input).gather(1, selection) # get the result with a predefined selection
 loss = F.mse_loss(Q_expected, Q_targets) # metric is mse
-self.optimizer.zero_grad()
+optimizer.zero_grad()
 loss.backward() # torch calculate gradients by using backpropgation for the loss function
-self.optimizer.step()
+optimizer.step()
 
 # evaluate the model
-self.qnetwork_local.eval() # use eval to turn off dropout etc before evaluate the model
+qnetwork_local.eval() # use eval to turn off dropout etc before evaluate the model
 with torch.no_grad():
-  action_values = self.qnetwork_local(state)
-self.qnetwork_local.train() # use train to get the model ready for training
+  action_values = qnetwork_local(state)
+qnetwork_local.train() # use train to get the model ready for training
+
+# get weights
+qnetwork_local.state_dict()
